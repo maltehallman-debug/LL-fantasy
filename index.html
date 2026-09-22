@@ -164,6 +164,7 @@ let current='';
 let view='pick';
 let db={friends:[],leagues:[{name:'Lidingö Fantasy 2026',code:'LL26',members:[],owner:''}]};
 function initials(n){return (n||'').split(' ').filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase()||'?'}
+function save(){if(currentUser)localStorage.setItem('llFantasySocial_'+currentUser.id,JSON.stringify(db))}
 function render(){document.getElementById('app').innerHTML=currentUser?appShell():loginPage()}
 async function loadUserData(){
  if(!currentUser)return;
@@ -172,6 +173,8 @@ async function loadUserData(){
   supabaseClient.from('fantasy_teams').select('selected_runners').eq('user_id',currentUser.id).maybeSingle()
  ]);
  current=profile?.display_name||currentUser.email.split('@')[0];
+ const social=JSON.parse(localStorage.getItem('llFantasySocial_'+currentUser.id)||'null');
+ if(social)db=social;
  selectedRunners=Array.isArray(team?.selected_runners)?team.selected_runners:[];
 }
 function loginPage(){return '<div class="login-wrap"><div class="login-box"><img class="login-logo" src="./assets/ll-logo.png" alt="TCS Lidingöloppet"><h1 class="login-title">Lidingöloppet Fantasy</h1><p class="login-sub">Bygg ditt lag. Tävla mot kompisarna.</p><div id="loginError"></div><div class="field"><label>E-post</label><input id="email" type="email" placeholder="du@exempel.se"></div><div class="field"><label>Lösenord</label><input id="password" type="password" placeholder="••••••••"></div><div class="login-actions"><button class="btn primary" onclick="login()">Logga in</button><button class="btn secondary" onclick="register()">Skapa konto</button></div><div class="login-note">Ditt konto sparas säkert och fungerar på alla dina enheter.</div></div></div>'}
@@ -190,8 +193,7 @@ async function register(){
  const {data,error}=await supabaseClient.auth.signUp({email:e,password:p});
  if(error){document.getElementById('loginError').innerHTML='<div class="error">Kunde inte skapa kontot.</div>';return}
  if(data.user){
-  await supabaseClient.from('profiles').upsert({id:data.user.id,display_name:n,updated_at:new Date().toISOString()},{onConflict:'id'});
-  if(data.session){currentUser=data.user;current=n;selectedRunners=[];render();toast('Kontot skapades')}
+  if(data.session){await supabaseClient.from('profiles').upsert({id:data.user.id,display_name:n,updated_at:new Date().toISOString()},{onConflict:'id'});currentUser=data.user;current=n;selectedRunners=[];render();toast('Kontot skapades')}
   else document.getElementById('loginError').innerHTML='<div class="success">Kontot skapades. Kontrollera din e-post för att bekräfta kontot.</div>';
  }
 }
