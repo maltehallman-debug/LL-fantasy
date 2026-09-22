@@ -196,7 +196,9 @@ async function register(){
  }
 }
 async function logout(){await supabaseClient.auth.signOut();currentUser=null;current='';selectedRunners=[];render()}
-function appShell(){let u={name:current};return
+function appShell(){let u={name:current};return `<header class="topbar"><img class="top-logo" src="./assets/ll-logo.png" alt="TCS Lidingöloppet"><nav class="nav"><button class="${view==='pick'?'active':''}" onclick="go('pick')">Välj löpare</button><button class="${view==='my'?'active':''}" onclick="go('my')">Mina löpare</button><button class="${view==='friends'?'active':''}" onclick="go('friends')">Kompisar</button><button class="${view==='leagues'?'active':''}" onclick="go('leagues')">Ligor</button></nav><div class="user-area"><div class="avatar">${initials(u.name)}</div><span class="user-name">${u.name}</span><button class="logout" onclick="logout()">Logga ut</button></div></header><main class="page">${view==='pick'?pickPage():view==='my'?myPage():view==='friends'?friendsPage():leaguesPage()}</main>`}
+function go(v){view=v;render()}
+
 function filteredRunners(rows){
   const q=runnerSearch.trim().toLowerCase();
   let list=rows.filter(r=>{
